@@ -81,8 +81,10 @@ class MeshGraphNet(torch.nn.Module):
 
         return self.decoder(x)
 
-    def loss(self, pred, inputs, mean_vec_stress, std_vec_stress):
-        labels = utils.normalize(inputs["stress"], mean_vec_stress, std_vec_stress)
+    def loss(self, pred, y, mean_vec_stress, std_vec_stress):
+        # loss function form is good for now
+        # pred is stress only
+        labels = utils.normalize(y, mean_vec_stress, std_vec_stress)
         error = torch.sum((labels - pred)**2, axis=1)
         loss = torch.sqrt(torch.mean(error))
 

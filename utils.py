@@ -3,6 +3,7 @@ import enum
 import os
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 def seed_everything(seed):
     random.seed(seed)
@@ -126,3 +127,28 @@ def get_stats(data_list):
     mean_std_list = [mean_vec_x, std_vec_x, mean_vec_edge, std_vec_edge, mean_vec_y, std_vec_y]
 
     return mean_std_list
+    
+def plot_losses(losses, test_losses, epoch, test_interval):
+    f = plt.figure()
+    plt.title('Losses Plot')
+    plt.plot(losses, label="training loss" )
+    x=np.array(list(range(len(test_losses))))*test_interval
+    plt.plot(x.tolist(),test_losses, label="test loss")
+    
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.savefig(f"Losses_{epoch}.png") 
+    plt.legend()
+    plt.show()
+    
+def plot_test_r2(test_r2, epoch, test_interval):
+    f = plt.figure()
+    plt.title('R2 Plot')
+    x=np.array(list(range(len(test_r2))))*test_interval
+    plt.plot(x.tolist(),test_r2, label="test R2")
+    
+    plt.xlabel('Epoch')
+    plt.ylabel('R2')
+    plt.savefig(f"R2_{epoch}.png") 
+    plt.legend()
+    plt.show()
