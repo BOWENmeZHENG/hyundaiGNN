@@ -4,6 +4,8 @@ import os
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 
 def seed_everything(seed):
     random.seed(seed)
@@ -128,7 +130,7 @@ def get_stats(data_list):
 
     return mean_std_list
     
-def plot_losses(losses, test_losses, epoch, test_interval):
+def plot_losses(losses, test_losses, epoch, test_interval, save_path):
     f = plt.figure()
     plt.title('Losses Plot')
     plt.plot(losses, label="training loss" )
@@ -137,11 +139,11 @@ def plot_losses(losses, test_losses, epoch, test_interval):
     
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.savefig(f"Losses_{epoch}.png") 
+    plt.savefig(f"{save_path}/Losses_{epoch}.png") 
     plt.legend()
     plt.show()
     
-def plot_test_r2(test_r2, epoch, test_interval):
+def plot_test_r2(test_r2, epoch, test_interval, save_path):
     f = plt.figure()
     plt.title('R2 Plot')
     x=np.array(list(range(len(test_r2))))*test_interval
@@ -149,6 +151,67 @@ def plot_test_r2(test_r2, epoch, test_interval):
     
     plt.xlabel('Epoch')
     plt.ylabel('R2')
-    plt.savefig(f"R2_{epoch}.png") 
+    plt.savefig(f"{save_path}/R2_{epoch}.png") 
     plt.legend()
     plt.show()
+
+def plot_dist(test_distribution, save_path):
+    a = test_distribution["pos"][:, 0]
+    b = test_distribution["pos"][:, 1]
+    c = test_distribution["pos"][:, 2]
+    d = test_distribution["faces"][:, 0]
+    e = test_distribution["faces"][:, 1]
+    f = test_distribution["faces"][:, 2]
+    fig = make_subplots(
+    rows=1, cols=3, horizontal_spacing=0.01,
+    specs=[[{'type': 'scene'},{'type': 'scene'},{'type': 'scene'}]])
+
+    color="Jet"
+    
+    maxx=test_distribution["data_stress"].max().item()
+    minn=test_distribution["data_stress"].min().item()
+    scale_=0.9
+    y_=0.5
+    
+    # adding surfaces to subplots.
+    fig.add_trace(
+        go.Mesh3d(
+            x=a,y=b,z=c,
+            colorbar_title='stress',
+            cmax=maxx,
+            cmin=minn,
+            colorscale=color,
+            intensity=test_distribution["data_stress"].numpy().tolist(),
+            i=d,j=e,k=f,name='y1',showscale=True, colorbar=dict(x=0.29, y=y_, len=scale_)),row=1, col=1)
+    
+    fig.add_trace(
+        go.Mesh3d(
+            x=a,y=b,z=c,
+            colorbar_title='stress',
+            cmax=maxx,
+            cmin=minn,
+            colorscale=color,
+            intensity=test_distribution["prediction_unnormalize"].numpy().tolist(),
+            i=d,j=e,k=f,name='y1',showscale=True, colorbar=dict(x=0.63, y=y_, len=scale_)),row=1, col=2)
+    
+    fig.add_trace(
+        go.Mesh3d(
+            x=a,y=b,z=c,
+            colorbar_title='stress',
+            cmax=maxx,
+            cmin=-maxx,
+            colorscale=color,
+            intensity=(test_distribution["data_stress"]-test_distribution["prediction_unnormalize"]).numpy().tolist(),
+            i=d,j=e,k=f,name='y1',showscale=True, colorbar=dict(x=0.97, y=y_, len=scale_)),row=1, col=3)
+    
+    
+    fig.update_scenes(aspectmode='data')
+    fig.update_traces(lightposition_x=0, lightposition_y=0, lightposition_z=2)
+    fig.update_scenes(camera_eye_x=0, camera_eye_y=0, camera_eye_z=2)
+    fig.update_scenes(xaxis_showticklabels=False, yaxis_showticklabels=False, zaxis_showticklabels=False)
+    fig.update_scenes(xaxis_title_text='', yaxis_title_text='',zaxis_title_text='')
+    fig.update_scenes(xaxis_visible=False, yaxis_visible=False,zaxis_visible=False )
+    
+    fig.update_layout(height=400, width=1000, title_text="Side By Side Subplots", showlegend=False)
+    fig.write_image(f"{save_path}.png") 
+    # fig.show()
